@@ -4,7 +4,7 @@ fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     if args.is_empty() || args[0] == "--help" {
         println!("SymEngine-X CLI");
-        println!("Usage: symx-cli <expression> [--derive-by VAR] [--integrate VAR] [--limit VAR:POINT] [--to latex]");
+        println!("Usage: symx-cli <expression> [--derive-by VAR] [--integrate VAR] [--limit VAR:POINT] [--factor] [--expand] [--collect VAR] [--to latex|mathml]");
         return;
     }
     let input = &args[0];
@@ -32,8 +32,19 @@ fn main() {
                 }
                 i += 2;
             }
+            "--factor" => { result = symx_core::simplify::factor::factor(&result); i += 1; }
+            "--expand" => { result = symx_core::simplify::expand::expand(&result); i += 1; }
+            "--collect" => {
+                let var = args.get(i + 1).cloned().unwrap_or_else(|| "x".into());
+                result = symx_core::simplify::collect::collect(&result, &var);
+                i += 2;
+            }
             "--to" => {
-                if args.get(i + 1).map(String::as_str) == Some("latex") { println!("{}", to_latex(&result)); return; }
+                match args.get(i + 1).map(String::as_str) {
+                    Some("latex") => { println!("{}", to_latex(&result)); return; }
+                    Some("mathml") => { println!("{}", symx_core::output::mathml::to_mathml(&result)); return; }
+                    _ => {}
+                }
                 i += 2;
             }
             _ => i += 1,
