@@ -86,3 +86,30 @@ fn mathml_function_output() {
     let xml = symx_core::output::mathml::to_mathml(&expr);
     assert!(xml.contains("<msqrt>"));
 }
+
+#[test]
+fn parser_rejects_invalid_input() {
+    assert!(parse("").is_err());
+    assert!(parse("1..2").is_err());
+    assert!(parse("x +").is_err());
+}
+
+#[test]
+fn miller_rabin_handles_strong_pseudoprime() {
+    // 3215031751 是经典强伪素数，固定基检测可正确排除。
+    assert!(!is_prime(3215031751));
+}
+
+#[test]
+fn infinity_limit_handles_constant_shift() {
+    let expr = parse("1 + 2/x").unwrap();
+    let lim = limit(&expr, "x", &Expr::zero(), Direction::PositiveInfinity);
+    assert_eq!(lim.to_string(), "1");
+}
+
+#[test]
+fn mathml_escapes_special_characters() {
+    let expr = Expr::func("a<b&c", vec![Expr::symbol("x")]);
+    let xml = symx_core::output::mathml::to_mathml(&expr);
+    assert!(xml.contains("a&lt;b&amp;c"));
+}
