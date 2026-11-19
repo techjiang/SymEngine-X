@@ -42,3 +42,12 @@ fn number_theory_and_limit() {
     let lim = limit(&expr, "x", &Expr::zero(), Direction::Right);
     assert!(!lim.to_string().is_empty());
 }
+
+#[test]
+fn mathml_output_has_infix_operators() {
+    let expr = parse("x + 2*x").unwrap();
+    let xml = symx_core::output::mathml::to_mathml(&expr);
+    assert!(xml.contains("<mo>+</mo>"));
+    assert!(xml.contains("<mo>&times;</mo>"));
+    assert!(xml.contains("<mi>x</mi>"));
+}
