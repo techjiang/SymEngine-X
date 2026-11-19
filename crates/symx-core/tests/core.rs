@@ -128,3 +128,24 @@ fn rational_latex_uses_fraction() {
     let latex = to_latex(&expr);
     assert!(latex.contains("\\frac{"));
 }
+
+#[test]
+fn numeric_eval_rejects_zero_to_negative_power() {
+    let expr = parse("0^(-1)").unwrap();
+    assert_eq!(symx_core::numerical_eval(&expr), None);
+}
+
+#[test]
+fn parser_supports_double_star_power() {
+    let expr = parse("x**3").unwrap();
+    assert_eq!(simplify(&derivative(&expr, "x")).to_string(), "3 * (x)^2");
+}
+
+#[test]
+fn infinity_symbols_have_math_outputs() {
+    let pos = Expr::func("+inf", vec![]);
+    let neg = Expr::func("-inf", vec![]);
+    assert_eq!(to_latex(&pos), "\\infty");
+    assert!(to_latex(&neg).contains("\\infty"));
+    assert!(symx_core::output::mathml::to_mathml(&pos).contains("&#8734;"));
+}

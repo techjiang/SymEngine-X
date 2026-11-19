@@ -21,6 +21,8 @@ pub fn to_latex(expr: &Expr) -> String {
             match name.as_str() {
                 "sin" | "cos" | "tan" | "ln" | "log" | "exp" => format!("{name}({args})"),
                 "sqrt" => format!("\\sqrt{{{args}}}"),
+                "+inf" => "\\infty".into(),
+                "-inf" => "-\\infty".into(),
                 _ => format!("\\operatorname{{{name}}}({args})"),
             }
         }

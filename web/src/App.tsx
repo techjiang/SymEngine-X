@@ -170,11 +170,17 @@ export default function App() {
   const [mode, setMode] = useState<'latex' | 'mathml'>('latex');
   const [op, setOp] = useState<Operation>('simplify');
   const [error, setError] = useState('');
+  const [runId, setRunId] = useState(0);
 
   const calculate = (value = input, operation = op, format = mode) => {
     const expression = value.trim();
+    const normalizedInput = expression.replace(/\s+/g, '').replace(/\*\*/g, '^');
     if (!expression) {
       setError('请输入表达式');
+      return;
+    }
+    if (!/^[0-9a-zA-Z_+\-*/^().,]+$/.test(normalizedInput)) {
+      setError('表达式包含不支持的字符');
       return;
     }
     setError('');
@@ -182,6 +188,7 @@ export default function App() {
     const next = computed[computed.length - 1].value;
     setSteps(computed);
     setHistory((items) => [next, ...items].slice(0, 20));
+    setRunId((id) => id + 1);
   };
 
   useEffect(() => { calculate(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
@@ -219,7 +226,7 @@ export default function App() {
         )}
       </section>
       <HistoryPanel items={history} />
-      <footer>SymEngine-X v1.0.0 · Apache 2.0 · 科技酱</footer>
+      <footer>SymEngine-X v1.0.0 · Apache 2.0 · 科技酱 · 更新 {runId}</footer>
     </main>
   );
 }

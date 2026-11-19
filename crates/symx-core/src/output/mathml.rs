@@ -14,6 +14,8 @@ pub fn to_mathml(expr: &Expr) -> String {
             let inner = infix_row(args, ",");
             match name.as_str() {
                 "sqrt" if args.len() == 1 => format!("<msqrt>{}</msqrt>", to_mathml(&args[0])),
+                "+inf" => "<mn>&#8734;</mn>".into(),
+                "-inf" => "<mrow><mo>-</mo><mn>&#8734;</mn></mrow>".into(),
                 _ => format!("<mrow><mi>{}</mi><mo>&#8288;(</mo>{}<mo>)</mo></mrow>", escape(name), inner),
             }
         }

@@ -1,4 +1,4 @@
-//! 中缀表达式解析器，支持四则运算、幂、括号、函数调用与科学计数法。
+//! 中缀表达式解析器，支持四则运算、幂、括号、函数调用、科学计数法与 `**` 幂写法。
 use crate::expr::Expr;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -24,7 +24,15 @@ fn lex(input: &str) -> Result<Vec<Token>, String> {
             '(' => { out.push(Token::LParen); i += 1; }
             ')' => { out.push(Token::RParen); i += 1; }
             ',' => { out.push(Token::Comma); i += 1; }
-            '+' | '-' | '*' | '/' | '^' => { out.push(Token::Op(c)); i += 1; }
+            '+' | '-' | '*' | '/' | '^' => {
+                if c == '*' && i + 1 < chars.len() && chars[i + 1] == '*' {
+                    out.push(Token::Op('^'));
+                    i += 2;
+                } else {
+                    out.push(Token::Op(c));
+                    i += 1;
+                }
+            }
             '0'..='9' | '.' => {
                 let start = i;
                 let mut dots = 0;

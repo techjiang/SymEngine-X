@@ -53,6 +53,7 @@ impl Expr {
             (_, Expr::Integer(1)) => base,
             (Expr::Integer(0), Expr::Integer(n)) if *n > 0 => Expr::zero(),
             (Expr::Integer(1), _) => Expr::one(),
+            (_, Expr::Integer(-1)) => Expr::div(Expr::one(), base),
             (Expr::Pow(inner, inner_exp), Expr::Integer(n)) => Expr::pow((**inner).clone(), Expr::mul((**inner_exp).clone(), Expr::integer(*n))),
             _ => Expr::Pow(Box::new(base), Box::new(exp)),
         }

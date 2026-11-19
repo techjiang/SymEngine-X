@@ -15,6 +15,11 @@ fn main() {
         println!("  --eval                数值求值");
         println!("  --factor / --expand / --collect VAR");
         println!("  --to latex|mathml     切换输出格式");
+        println!("  --version             显示版本号");
+        return;
+    }
+    if args[0] == "--version" {
+        println!("SymEngine-X {}", symx_core::version());
         return;
     }
     let input = &args[0];

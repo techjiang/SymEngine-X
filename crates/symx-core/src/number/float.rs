@@ -18,6 +18,7 @@ fn eval(expr: &Expr) -> Option<f64> {
         Expr::Pow(base, exp) => {
             let b = eval(base)?;
             let e = eval(exp)?;
+            if b == 0.0 && e < 0.0 { return None; }
             let value = b.powf(e);
             if value.is_finite() { Some(value) } else { None }
         }

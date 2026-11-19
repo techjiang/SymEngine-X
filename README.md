@@ -29,6 +29,8 @@ cargo run -p symx-cli -- '2^10 + 3' --eval
 - `--eval` 数值求值
 - `--factor` / `--expand` / `--collect VAR` 代数变换
 - `--to latex|mathml` 切换输出格式
+- `--version` 显示版本号
+- 表达式中的 `**` 等价于 `^`，例如 `x**2` 与 `x^2` 相同
 
 ## 核心 API
 
