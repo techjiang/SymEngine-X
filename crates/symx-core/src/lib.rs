@@ -10,7 +10,20 @@ pub mod simplify;
 pub use expr::Expr;
 pub use linalg::Matrix;
 
+/// 引擎版本号。
 pub const VERSION: &str = "1.0.0";
+
+/// 解析中缀表达式。
+///
+/// # Examples
+///
+/// ```
+/// use symx_core::parse;
+/// let expr = parse("x^2 + 2*x + 1").unwrap();
+/// assert!(expr.to_string().contains('x'));
+/// ```
+pub fn parse_checked(input: &str) -> Result<Expr, String> { parse(input) }
+
 
 pub fn parse(input: &str) -> Result<Expr, String> { parser::parse(input) }
 pub fn parse_latex(input: &str) -> Result<Expr, String> { parser::latex::parse(input) }
