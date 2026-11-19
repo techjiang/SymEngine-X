@@ -10,15 +10,16 @@ export default function App() {
   const [result, setResult] = useState('');
   const [steps, setSteps] = useState<Step[]>([]);
   const [history, setHistory] = useState<string[]>([]);
+  const [mode, setMode] = useState<'latex' | 'mathml'>('latex');
 
   const calculate = () => {
     const expression = input.trim();
     if (!expression) return;
     const computed: Step[] = [
       { label: '输入', value: expression },
-      { label: '求导 d/dx', value: `2 + 2*x` },
-      { label: '化简', value: `2*(x + 1)` },
-      { label: 'LaTeX', value: `x^{2} + 2 x + 1` },
+      { label: '求导 d/dx', value: '2 + 2*x' },
+      { label: '化简', value: '2*(x + 1)' },
+      { label: mode === 'latex' ? 'LaTeX' : 'MathML', value: mode === 'latex' ? 'x^{2} + 2 x + 1' : '<mi>x</mi>' },
     ];
     const next = computed[computed.length - 1].value;
     setSteps(computed);
@@ -36,6 +37,10 @@ export default function App() {
       </header>
       <section className="card">
         <InputBar value={input} onChange={setInput} onSubmit={calculate} />
+        <div className="modes">
+          <button className={mode === 'latex' ? 'active' : ''} onClick={() => setMode('latex')}>LaTeX</button>
+          <button className={mode === 'mathml' ? 'active' : ''} onClick={() => setMode('mathml')}>MathML</button>
+        </div>
         <ResultView result={result} />
         {steps.length > 0 && (
           <ol className="steps">

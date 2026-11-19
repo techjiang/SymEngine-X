@@ -10,6 +10,8 @@ SymEngine-X 是一个高性能符号数学计算引擎，提供 Rust 核心、CL
 cargo test --workspace
 cargo run -p symx-cli -- 'x^2 + 2*x + 1' --derive-by x --to latex
 cargo run -p symx-cli -- 'x^2 + 2*x + 1' --collect x --to mathml
+cargo run -p symx-cli -- 'x^2 - 2*x + 1' --factor
+cargo run -p symx-cli -- '1/x' --limit x:0
 ```
 
 ## CLI 选项
@@ -27,5 +29,11 @@ cargo run -p symx-cli -- 'x^2 + 2*x + 1' --collect x --to mathml
 - `crates/symx-python`：PyO3 绑定骨架
 - `crates/symx-wasm`：WASM 绑定骨架
 - `web`：React Web 计算器
+
+## 路线图
+
+- 完成 Risch 积分、SVD 分解、PDE 求解
+- 完善 PyO3 与 wasm-bindgen 正式包
+- Web 计算器接入 WASM 实时计算
 
 Apache 2.0 © 2026 科技酱
