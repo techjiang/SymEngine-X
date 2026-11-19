@@ -1,3 +1,4 @@
+//! 中缀表达式解析器，支持四则运算、幂、括号、函数调用与科学计数法。
 use crate::expr::Expr;
 
 #[derive(Clone, Debug, PartialEq)]
