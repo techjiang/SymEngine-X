@@ -14,6 +14,7 @@ cargo run -p symx-cli -- 'x^2 - 2*x + 1' --factor
 cargo run -p symx-cli -- 'x^2 - 5*x + 6' --solve x
 cargo run -p symx-cli -- 'sin(x)^2' --integrate x
 cargo run -p symx-cli -- '1 + 2/x' --limit x:+inf
+cargo run -p symx-cli -- '1/x' --limit x:0:right
 cargo run -p symx-cli -- 'exp(x)' --taylor x:0:5
 cargo run -p symx-cli -- '2^10 + 3' --eval
 ```
@@ -22,7 +23,7 @@ cargo run -p symx-cli -- '2^10 + 3' --eval
 
 - `--derive-by VAR` 求导
 - `--integrate VAR` 积分
-- `--limit VAR:POINT` 极限，POINT 支持 `0` / `+inf` / `-inf`
+- `--limit VAR:POINT[:DIR]` 极限，POINT 支持 `0` / `+inf` / `-inf`，DIR 支持 `both` / `left` / `right`
 - `--taylor VAR:POINT:N` 在 POINT 处展开 N 阶 Taylor
 - `--solve VAR` 求解一元多项式方程（一次/二次/三次）
 - `--eval` 数值求值
@@ -56,5 +57,6 @@ println!("{}", to_latex(&expr));                         // LaTeX
 - 完成 Risch 积分、SVD 分解、PDE 求解
 - 完善 PyO3 与 wasm-bindgen 正式包
 - Web 计算器接入 WASM 实时计算
+- CLI 增加批量表达式与脚本输入
 
 Apache 2.0 © 2026 科技酱

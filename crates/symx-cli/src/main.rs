@@ -8,7 +8,8 @@ fn main() {
         println!("Options:");
         println!("  --derive-by VAR       对 VAR 求导");
         println!("  --integrate VAR       对 VAR 积分");
-        println!("  --limit VAR:POINT     求极限，POINT 支持 0/+inf/-inf");
+        println!("  --limit VAR:POINT:DIR 求极限，DIR 支持 both/left/right（默认 both）");
+        println!("                        POINT 支持 0/+inf/-inf 或任意数值表达式");
         println!("  --taylor VAR:POINT:N  Taylor 展开");
         println!("  --solve VAR           求解一元多项式方程");
         println!("  --eval                数值求值");
@@ -41,10 +42,16 @@ fn main() {
             }
             "--limit" => {
                 let arg = args.get(i + 1).cloned().unwrap_or_default();
-                let parts: Vec<&str> = arg.splitn(2, ':').collect();
-                if parts.len() == 2 {
-                    let point = parse(parts[1]).unwrap_or(Expr::zero());
-                    result = limit(&result, parts[0], &point, Direction::Both);
+                let parts: Vec<&str> = arg.split(':').collect();
+                if parts.len() >= 2 {
+                    let (point_arg, direction) = if parts.len() >= 3 {
+                        (parts[1], parts[2..].join(":"))
+                    } else {
+                        (parts[1], "both".to_string())
+                    };
+                    let point = parse(point_arg).unwrap_or(Expr::zero());
+                    let direction = direction.parse().unwrap_or(Direction::Both);
+                    result = limit(&result, parts[0], &point, direction);
                 }
                 i += 2;
             }
