@@ -43,6 +43,7 @@ pub fn limit(expr: &Expr, var: &str, point: &Expr, direction: Direction) -> Expr
 fn limit_at_infinity(expr: &Expr, var: &str, positive: bool) -> Expr {
     if !contains_var(expr, var) { return crate::simplify::simplify(expr); }
     if let Some(value) = rational_infinity_limit(expr, var) { return value; }
+    if let Some(value) = rational_infinity_limit_with_coeff(expr, var, positive) { return value; }
     match expr {
         Expr::Integer(_) | Expr::Rational(_, _) | Expr::Float(_) => expr.clone(),
         Expr::Symbol(s) if s == var => Expr::func(if positive { "+inf" } else { "-inf" }, vec![]),
@@ -85,6 +86,50 @@ fn rational_infinity_limit(expr: &Expr, var: &str) -> Option<Expr> {
         }
     }
     None
+}
+
+fn rational_infinity_limit_with_coeff(expr: &Expr, var: &str, positive: bool) -> Option<Expr> {
+    let Expr::Mul(items) = expr else { return None; };
+    if items.len() != 2 { return None; }
+    let (numerator, denominator) = (&items[0], &items[1]);
+    let Expr::Pow(den_base, den_exp) = denominator else { return None; };
+    if den_base.as_ref() != &Expr::symbol(var) { return None; }
+    let Expr::Integer(den_n) = den_exp.as_ref() else { return None; };
+    if *den_n <= 0 { return None; }
+    let (coefficient, degree) = polynomial_numerator(numerator, var)?;
+    if degree < *den_n { return Some(Expr::zero()); }
+    if degree > *den_n {
+        let sign = if positive || degree % 2 == 0 || coefficient > 0.0 { 1.0 } else { -1.0 };
+        return Some(Expr::func(if sign > 0.0 { "+inf" } else { "-inf" }, vec![]));
+    }
+    let sign = if !positive && degree % 2 == 1 { -coefficient } else { coefficient };
+    Some(number_expr(sign))
+}
+
+fn polynomial_numerator(expr: &Expr, var: &str) -> Option<(f64, i64)> {
+    match expr {
+        Expr::Pow(base, exp) if base.as_ref() == &Expr::symbol(var) => Some((1.0, as_i64(exp)?)),
+        Expr::Mul(items) => {
+            let mut coefficient = 1.0;
+            let mut degree = 0;
+            for item in items {
+                match item {
+                    Expr::Integer(n) => coefficient *= *n as f64,
+                    Expr::Rational(n, d) if *d != 0 => coefficient *= *n as f64 / *d as f64,
+                    Expr::Float(n) => coefficient *= *n,
+                    Expr::Pow(base, exp) if base.as_ref() == &Expr::symbol(var) => degree += as_i64(exp)?,
+                    Expr::Symbol(s) if s == var => degree += 1,
+                    _ => return None,
+                }
+            }
+            Some((coefficient, degree))
+        }
+        _ => None,
+    }
+}
+
+fn number_expr(n: f64) -> Expr {
+    if n.fract() == 0.0 && n.abs() < i64::MAX as f64 { Expr::integer(n as i64) } else { Expr::Float(n) }
 }
 
 fn as_i64(expr: &Expr) -> Option<i64> { if let Expr::Integer(n) = expr { Some(*n) } else { None } }

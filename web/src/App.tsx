@@ -1,15 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import InputBar from './components/InputBar';
 import ResultView from './components/ResultView';
 import HistoryPanel from './components/HistoryPanel';
 
 type Step = { label: string; value: string };
-type Operation = 'simplify' | 'derive' | 'integrate' | 'factor' | 'collect';
+type Operation = 'simplify' | 'derive' | 'integrate' | 'limit' | 'factor' | 'collect';
 
 const OPERATIONS: { key: Operation; label: string }[] = [
   { key: 'simplify', label: '化简' },
   { key: 'derive', label: '求导' },
   { key: 'integrate', label: '积分' },
+  { key: 'limit', label: '极限' },
   { key: 'factor', label: '因式分解' },
   { key: 'collect', label: '合并同类项' },
 ];
@@ -29,6 +30,10 @@ function compute(input: string, op: Operation, format: 'latex' | 'mathml'): Step
     case 'integrate':
       result = integrate(normalized);
       steps.push({ label: '积分 ∫dx', value: result });
+      break;
+    case 'limit':
+      result = limit(normalized);
+      steps.push({ label: '极限 x→0', value: result });
       break;
     case 'factor':
       result = factor(normalized);
@@ -74,6 +79,16 @@ function integrate(expr: string): string {
   if (expr.includes('sin(')) return '-cos(x)';
   if (expr.includes('exp(')) return 'exp(x)';
   return `∫(${expr})dx`;
+}
+
+function limit(expr: string): string {
+  const match = expr.match(/^(?:(\d+)\*)?x\^((?:-\d+)|(?:\d+))$/);
+  if (!match) return expr;
+  const coefficient = match[1] ? Number(match[1]) : 1;
+  const exponent = Number(match[2]);
+  if (exponent < 0) return 'inf';
+  if (exponent === 0) return String(coefficient);
+  return '0';
 }
 
 function factor(expr: string): string {
@@ -127,6 +142,7 @@ function toLatex(expr: string): string {
     .replace(/#/g, '\\#')
     .replace(/_/g, '\\_')
     .replace(/\*([a-zA-Z])/g, ' $1')
+    .replace(/^inf$/, '\\infty')
     .replace(/x\^(\d+)/g, 'x^{$1}');
   const slash = escaped.indexOf('/');
   if (slash === -1) return escaped;
@@ -136,6 +152,7 @@ function toLatex(expr: string): string {
 }
 
 function toMathML(expr: string): string {
+  if (expr === 'inf') return '<mrow><mn>&#8734;</mn></mrow>';
   const parts = expr.split(/([+*/])/).filter(Boolean);
   const body = parts.map((part) => {
     if (part === '+') return '<mo>+</mo>';
@@ -171,6 +188,9 @@ export default function App() {
   const [op, setOp] = useState<Operation>('simplify');
   const [error, setError] = useState('');
   const [runId, setRunId] = useState(0);
+  const [copied, setCopied] = useState(false);
+
+  const heroSteps = useMemo(() => OPERATIONS.length, []);
 
   const calculate = (value = input, operation = op, format = mode) => {
     const expression = value.trim();
@@ -189,6 +209,7 @@ export default function App() {
     setSteps(computed);
     setHistory((items) => [next, ...items].slice(0, 20));
     setRunId((id) => id + 1);
+    setCopied(false);
   };
 
   useEffect(() => { calculate(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
@@ -196,7 +217,7 @@ export default function App() {
   return (
     <main>
       <header>
-        <h1>SymEngine-X <span className="badge">v1.0.0</span><span className="pill">6 × 5 轮更新</span></h1>
+        <h1>SymEngine-X <span className="badge">v1.0.0</span><span className="pill">7 × 5 轮更新 · {heroSteps} 种运算</span></h1>
         <p>符号数学计算引擎 · 在线计算器 · 本轮聚焦极限方向、输出边界与稳定性</p>
       </header>
       <section className="card">
@@ -217,6 +238,15 @@ export default function App() {
             onClick={() => { setMode('mathml'); calculate(input, op, 'mathml'); }}>MathML</button>
         </div>
         <ResultView result={steps.length ? steps[steps.length - 1].value : ''} />
+        <div className="actions">
+          <button onClick={() => {
+            const value = steps.length ? steps[steps.length - 1].value : '';
+            if (!value) return;
+            navigator.clipboard?.writeText(value).then(() => setCopied(true)).catch(() => setCopied(false));
+          }}>复制结果</button>
+          <button onClick={() => { setInput('x^2 - 2*x + 1'); setOp('simplify'); setMode('latex'); calculate('x^2 - 2*x + 1', 'simplify', 'latex'); }}>重置示例</button>
+          {copied && <span className="hint">已复制</span>}
+        </div>
         {steps.length > 0 && (
           <ol className="steps">
             {steps.map((step, index) => (

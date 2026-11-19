@@ -46,10 +46,19 @@ fn lex(input: &str) -> Result<Vec<Token>, String> {
                 if !value.is_finite() { return Err("invalid number".into()); }
                 out.push(Token::Num(value));
             }
-            'a'..='z' | 'A'..='Z' | '_' => {
+            '0'..='9' | '.' | 'a'..='z' | 'A'..='Z' | '_' => {
                 let start = i;
-                while i < chars.len() && (chars[i].is_ascii_alphanumeric() || chars[i] == '_') { i += 1; }
-                out.push(Token::Ident(chars[start..i].iter().collect()));
+                while i < chars.len() && (chars[i].is_ascii_alphanumeric() || chars[i] == '.' || chars[i] == '_') { i += 1; }
+                let text: String = chars[start..i].iter().collect();
+                if text.chars().next().is_some_and(|c| c.is_ascii_digit() || c == '.')
+                    && text.contains('e')
+                {
+                    let value = text.parse::<f64>().map_err(|_| "invalid number".to_string())?;
+                    if !value.is_finite() { return Err("invalid number".into()); }
+                    out.push(Token::Num(value));
+                } else {
+                    out.push(Token::Ident(text));
+                }
             }
             _ => return Err(format!("unknown character: {c}")),
         }

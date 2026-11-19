@@ -62,3 +62,19 @@ println!("{}", to_latex(&expr));                         // LaTeX
 - CLI 增加批量表达式与脚本输入
 
 Apache 2.0 © 2026 科技酱
+
+
+## 本轮增量：7 × 5 轮更新
+
+- 输出：LaTeX/MathML 对符号形式的无穷统一渲染
+- 极限：有理式无穷极限保留最高次项系数，支持符号/数值无穷输入
+- 表达式：任意负整数指数归一化为倒数
+- 数值：支持 `pow/abs/min/max` 函数求值
+- CLI：新增 `--latex-expr`、`--mathml-expr` 直接渲染表达式
+- Web：新增极限运算、复制结果与重置示例
+
+```bash
+symx-cli --latex-expr 'x^2 + 1/2'
+symx-cli --mathml-expr 'sqrt(x)'
+symx-cli '2*x/x' --limit x:+inf
+```

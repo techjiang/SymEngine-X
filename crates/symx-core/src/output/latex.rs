@@ -5,7 +5,7 @@ pub fn to_latex(expr: &Expr) -> String {
         Expr::Integer(n) => n.to_string(),
         Expr::Rational(n, d) => format!("\\frac{{{n}}}{{{d}}}"),
         Expr::Float(n) => crate::number::float::format(*n),
-        Expr::Symbol(s) => s.clone(),
+        Expr::Symbol(s) => escape_symbol(s),
         Expr::Neg(inner) => format!("-{}", wrap(inner)),
         Expr::Add(items) => items.iter().map(to_latex).collect::<Vec<_>>().join(" + "),
         Expr::Mul(items) => items.iter().map(|item| latex_factor(item)).collect::<Vec<_>>().join(" "),
@@ -21,11 +21,17 @@ pub fn to_latex(expr: &Expr) -> String {
             match name.as_str() {
                 "sin" | "cos" | "tan" | "ln" | "log" | "exp" => format!("{name}({args})"),
                 "sqrt" => format!("\\sqrt{{{args}}}"),
-                "+inf" => "\\infty".into(),
-                "-inf" => "-\\infty".into(),
                 _ => format!("\\operatorname{{{name}}}({args})"),
             }
         }
+    }
+}
+
+fn escape_symbol(name: &str) -> String {
+    match name {
+        "+inf" => "\\infty".into(),
+        "-inf" => "-\\infty".into(),
+        other => other.to_string(),
     }
 }
 

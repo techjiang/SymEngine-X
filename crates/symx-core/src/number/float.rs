@@ -29,6 +29,17 @@ fn eval(expr: &Expr) -> Option<f64> {
             ("exp", [x]) => eval(x).map(f64::exp),
             ("ln" | "log", [x]) => eval(x).and_then(|n| if n > 0.0 { Some(n.ln()) } else { None }),
             ("sqrt", [x]) => eval(x).and_then(|n| if n >= 0.0 { Some(n.sqrt()) } else { None }),
+            (name, [first, second]) if name == "pow" => {
+                let base = eval(first)?;
+                let exp = eval(second)?;
+                if base == 0.0 && exp < 0.0 { return None; }
+                Some(base.powf(exp))
+            }
+            ("abs", [x]) => eval(x).map(f64::abs),
+            ("min" | "max", items) if items.len() >= 2 => {
+                let values: Vec<f64> = items.iter().map(eval).collect::<Option<_>>()?;
+                Some(if name == "min" { values.into_iter().fold(f64::INFINITY, f64::min) } else { values.into_iter().fold(f64::NEG_INFINITY, f64::max) })
+            }
             _ => None,
         },
         Expr::Symbol(_) => None,

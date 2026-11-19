@@ -149,3 +149,31 @@ fn infinity_symbols_have_math_outputs() {
     assert!(to_latex(&neg).contains("\\infty"));
     assert!(symx_core::output::mathml::to_mathml(&pos).contains("&#8734;"));
 }
+
+#[test]
+fn infinity_output_accepts_symbol_form() {
+    let positive = Expr::symbol("+inf");
+    let negative = Expr::symbol("-inf");
+    assert_eq!(to_latex(&positive), "\\infty");
+    assert_eq!(to_latex(&negative), "-\\infty");
+    assert!(symx_core::output::mathml::to_mathml(&positive).contains("&#8734;"));
+}
+
+#[test]
+fn infinity_limit_keeps_leading_coefficient() {
+    let expr = parse("2*x / x").unwrap();
+    let lim = limit(&expr, "x", &Expr::zero(), Direction::PositiveInfinity);
+    assert_eq!(lim.to_string(), "2");
+}
+
+#[test]
+fn negative_power_normalizes_to_reciprocal() {
+    let expr = parse("x^(-2)").unwrap();
+    assert!(expr.to_string().contains('/'));
+}
+
+#[test]
+fn parser_accepts_scientific_notation() {
+    let expr = parse("1e3 + 2*x").unwrap();
+    assert!(expr.to_string().contains("1000") || expr.to_string().contains("1e3"));
+}

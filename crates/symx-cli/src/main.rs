@@ -3,7 +3,7 @@ use symx_core::prelude::*;
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     if args.is_empty() || args[0] == "--help" {
-        println!("SymEngine-X CLI");
+        println!("SymEngine-X {}", symx_core::version());
         println!("Usage: symx-cli <expression> [options]");
         println!("Options:");
         println!("  --derive-by VAR       对 VAR 求导");
@@ -16,6 +16,16 @@ fn main() {
         println!("  --factor / --expand / --collect VAR");
         println!("  --to latex|mathml     切换输出格式");
         println!("  --version             显示版本号");
+        return;
+    }
+    if args.len() >= 2 && (args[0] == "--latex-expr" || args[0] == "--mathml-expr") {
+        match parse(&args[1]) {
+            Ok(expr) => {
+                if args[0] == "--latex-expr" { println!("{}", to_latex(&expr)); }
+                else { println!("{}", symx_core::output::mathml::to_mathml(&expr)); }
+            }
+            Err(err) => { eprintln!("parse error: {err}"); std::process::exit(1); }
+        }
         return;
     }
     if args[0] == "--version" {
