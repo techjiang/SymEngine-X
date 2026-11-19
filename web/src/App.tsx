@@ -126,7 +126,7 @@ function toLatex(expr: string): string {
     .replace(/\$/g, '\\$')
     .replace(/#/g, '\\#')
     .replace(/_/g, '\\_')
-    .replace(/\*/([a-zA-Z])/g, ' $1')
+    .replace(/\*([a-zA-Z])/g, ' $1')
     .replace(/x\^(\d+)/g, 'x^{$1}');
   const slash = escaped.indexOf('/');
   if (slash === -1) return escaped;
