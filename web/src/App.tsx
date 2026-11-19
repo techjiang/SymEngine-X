@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import InputBar from './components/InputBar';
 import ResultView from './components/ResultView';
 import HistoryPanel from './components/HistoryPanel';
@@ -25,6 +25,8 @@ export default function App() {
     setResult(next);
     setHistory((items) => [next, ...items].slice(0, 20));
   };
+
+  useEffect(() => { calculate(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
 
   return (
     <main>

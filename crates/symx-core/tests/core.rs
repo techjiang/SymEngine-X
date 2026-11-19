@@ -65,3 +65,24 @@ fn factor_difference_of_squares() {
     let factored = symx_core::simplify::factor::factor(&symx_core::parser::parse("x^2 + 2*x + 1").unwrap());
     assert!(matches!(factored, Expr::Mul(_)));
 }
+
+#[test]
+fn matrix_determinant_and_eigen_trace() {
+    let m = Matrix::new(3, 3, &[1, 0, 0, 0, 2, 0, 0, 0, 3]);
+    let det = symx_core::linalg::determinant::determinant(&m).unwrap();
+    assert!((det - 6.0).abs() < 1e-9);
+}
+
+#[test]
+fn modular_exponentiation_large_exponent() {
+    assert_eq!(mod_pow(7, 1000, 13), 9);
+    assert_eq!(is_prime(97), true);
+    assert_eq!(is_prime(1), false);
+}
+
+#[test]
+fn mathml_function_output() {
+    let expr = parse("sqrt(x)").unwrap();
+    let xml = symx_core::output::mathml::to_mathml(&expr);
+    assert!(xml.contains("<msqrt>"));
+}
