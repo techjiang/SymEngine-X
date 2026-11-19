@@ -4,12 +4,18 @@ pub fn to_latex(expr: &Expr) -> String {
     match expr {
         Expr::Integer(n) => n.to_string(),
         Expr::Rational(n, d) => format!("\\frac{{{n}}}{{{d}}}"),
-        Expr::Float(n) => format!("{n}"),
+        Expr::Float(n) => crate::number::float::format(*n),
         Expr::Symbol(s) => s.clone(),
         Expr::Neg(inner) => format!("-{}", wrap(inner)),
         Expr::Add(items) => items.iter().map(to_latex).collect::<Vec<_>>().join(" + "),
         Expr::Mul(items) => items.iter().map(|item| latex_factor(item)).collect::<Vec<_>>().join(" "),
-        Expr::Pow(base, exp) => format!("{}^{{{}}}", wrap(base), to_latex(exp)),
+        Expr::Pow(base, exp) => {
+            let exponent = to_latex(exp);
+            let body = if exponent.contains('-') || exponent.contains('+') {
+                format!("{{{exponent}}}")
+            } else { exponent };
+            format!("{}^{{{body}}}", wrap(base))
+        }
         Expr::Function(name, args) => {
             let args = args.iter().map(to_latex).collect::<Vec<_>>().join(", ");
             match name.as_str() {

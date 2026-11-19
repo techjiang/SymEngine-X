@@ -1,13 +1,25 @@
 use crate::expr::Expr;
 
 #[derive(Clone, Copy)]
-enum Num { Int(i64), Float(f64) }
+enum Num { Int(i64), Rational(i64, i64), Float(f64) }
 
 impl Num {
-    fn as_f64(self) -> f64 { match self { Num::Int(n) => n as f64, Num::Float(n) => n } }
+    fn as_f64(self) -> f64 {
+        match self {
+            Num::Int(n) => n as f64,
+            Num::Rational(n, d) => n as f64 / d as f64,
+            Num::Float(n) => n,
+        }
+    }
     fn add(self, other: Num) -> Num {
         match (self, other) {
             (Num::Int(a), Num::Int(b)) => Num::Int(a + b),
+            (Num::Rational(n1, d1), Num::Rational(n2, d2)) => {
+                let n = n1 * d2 + n2 * d1;
+                let d = d1 * d2;
+                let (n, d) = super::super::number::rational::reduce(n, d);
+                if d == 1 { Num::Int(n) } else { Num::Rational(n, d) }
+            }
             (a, b) => Num::Float(a.as_f64() + b.as_f64()),
         }
     }
@@ -15,6 +27,7 @@ impl Num {
     fn expr(self) -> Expr {
         match self {
             Num::Int(n) => Expr::integer(n),
+            Num::Rational(n, d) => Expr::Rational(n, d),
             Num::Float(n) if n.fract() == 0.0 && n.abs() < i64::MAX as f64 => Expr::integer(n as i64),
             Num::Float(n) => Expr::Float(n),
         }
@@ -58,7 +71,7 @@ fn extract_coeff_power(expr: &Expr, symbol: &str) -> (Num, Expr) {
         for item in items {
             match item {
                 Expr::Integer(n) => coeff = Num::Int(*n),
-                Expr::Rational(n, d) if *d != 0 => coeff = Num::Float(*n as f64 / *d as f64),
+                Expr::Rational(n, d) if *d != 0 => coeff = Num::Rational(*n, *d),
                 Expr::Float(n) => coeff = Num::Float(*n),
                 Expr::Neg(inner) => { let (c, p) = extract_coeff_power(inner, symbol); coeff = Num::Float(-c.as_f64()); if p != Expr::zero() { power = p; } }
                 Expr::Symbol(s) if s == symbol => power = Expr::one(),
@@ -77,7 +90,7 @@ fn extract_coeff_power(expr: &Expr, symbol: &str) -> (Num, Expr) {
     } else {
         match expr {
             Expr::Integer(n) => (Num::Int(*n), Expr::zero()),
-            Expr::Rational(n, d) if *d != 0 => (Num::Float(*n as f64 / *d as f64), Expr::zero()),
+            Expr::Rational(n, d) if *d != 0 => (Num::Rational(*n, *d), Expr::zero()),
             Expr::Float(n) => (Num::Float(*n), Expr::zero()),
             _ => (Num::Int(1), Expr::zero()),
         }

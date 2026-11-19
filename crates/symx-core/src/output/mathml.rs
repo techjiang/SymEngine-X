@@ -4,7 +4,7 @@ pub fn to_mathml(expr: &Expr) -> String {
     match expr {
         Expr::Integer(n) => format!("<mn>{n}</mn>"),
         Expr::Rational(n, d) => format!("<mfrac><mn>{n}</mn><mn>{d}</mn></mfrac>"),
-        Expr::Float(n) => format!("<mn>{n}</mn>"),
+        Expr::Float(n) => format!("<mn>{}</mn>", crate::number::float::format(*n)),
         Expr::Symbol(s) => format!("<mi>{}</mi>", escape(s)),
         Expr::Neg(inner) => format!("<mrow><mo>-</mo>{}</mrow>", to_mathml(inner)),
         Expr::Add(items) => infix_row(items, "+"),

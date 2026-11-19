@@ -46,6 +46,10 @@ pub fn derivative(expr: &Expr, var: &str) -> Expr {
                 "cos" => Expr::neg(Expr::func("sin", vec![arg.clone()])),
                 "exp" => Expr::func("exp", vec![arg.clone()]),
                 "ln" | "log" => Expr::div(Expr::one(), arg.clone()),
+                "sqrt" => Expr::div(
+                    Expr::one(),
+                    Expr::mul(Expr::integer(2), Expr::func("sqrt", vec![arg.clone()])),
+                ),
                 _ => Expr::func("derivative", vec![Expr::symbol(name), arg.clone()]),
             };
             simplify(&Expr::mul(outer, inner))

@@ -1,5 +1,6 @@
 use crate::expr::Expr;
 
+
 pub fn integrate(expr: &Expr, var: &str) -> Expr {
     let expr = crate::simplify::simplify(expr);
     let inner = match &expr {
@@ -37,6 +38,7 @@ pub fn integrate(expr: &Expr, var: &str) -> Expr {
                 else { Expr::div(Expr::pow(Expr::symbol(var), Expr::integer(n + 1)), Expr::integer(n + 1)) }
             } else { Expr::func("integrate", vec![inner.clone(), Expr::symbol(var)]) }
         }
+        // 幂函数与复合函数统一走下面的兜底分支。
         Expr::Function(name, args) if args.len() == 1 && args[0] == Expr::symbol(var) => match name.as_str() {
             "sin" => Expr::neg(Expr::func("cos", vec![Expr::symbol(var)])),
             "cos" => Expr::func("sin", vec![Expr::symbol(var)]),
