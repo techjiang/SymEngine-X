@@ -1,0 +1,13 @@
+[workspace]
+members = ["crates/*"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+authors = ["科技酱 <official@tech.asoe.cn>"]
+repository = "https://github.com/techjiang/"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }

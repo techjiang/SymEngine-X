@@ -1,0 +1,31 @@
+pub mod algebra;
+pub mod calculus;
+pub mod expr;
+pub mod linalg;
+pub mod number;
+pub mod output;
+pub mod parser;
+pub mod simplify;
+
+pub use expr::Expr;
+pub use linalg::Matrix;
+
+pub const VERSION: &str = "1.0.0";
+
+pub fn parse(input: &str) -> Result<Expr, String> { parser::parse(input) }
+pub fn parse_latex(input: &str) -> Result<Expr, String> { parser::latex::parse(input) }
+
+pub mod prelude {
+    pub use crate::calculus::derivative::{derivative, nth_derivative};
+    pub use crate::calculus::integral::{definite_integral, integrate, substitute};
+    pub use crate::calculus::limit::{limit, Direction};
+    pub use crate::calculus::series::taylor;
+    pub use crate::expr::Expr;
+    pub use crate::linalg::Matrix;
+    pub use crate::number::float::evaluate;
+    pub use crate::number::number_theory::{factorize, is_prime, mod_inverse, mod_pow};
+    pub use crate::output::latex::to_latex;
+    pub use crate::parser::infix::parse;
+    pub use crate::parser::latex::parse as parse_latex;
+    pub use crate::simplify::{expand, factor, simplify};
+}
