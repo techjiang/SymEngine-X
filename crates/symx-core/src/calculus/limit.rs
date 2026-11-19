@@ -27,6 +27,7 @@ pub fn limit(expr: &Expr, var: &str, point: &Expr, direction: Direction) -> Expr
 }
 
 fn limit_at_infinity(expr: &Expr, var: &str, positive: bool) -> Expr {
+    if !contains_var(expr, var) { return crate::simplify::simplify(expr); }
     match expr {
         Expr::Integer(_) | Expr::Rational(_, _) | Expr::Float(_) => expr.clone(),
         Expr::Symbol(s) if s == var => Expr::func(if positive { "+inf" } else { "-inf" }, vec![]),
@@ -50,3 +51,13 @@ fn limit_at_infinity(expr: &Expr, var: &str, positive: bool) -> Expr {
 }
 
 fn as_i64(expr: &Expr) -> Option<i64> { if let Expr::Integer(n) = expr { Some(*n) } else { None } }
+
+fn contains_var(expr: &Expr, var: &str) -> bool {
+    match expr {
+        Expr::Symbol(s) => s == var,
+        Expr::Add(items) | Expr::Mul(items) | Expr::Function(_, items) => items.iter().any(|e| contains_var(e, var)),
+        Expr::Neg(e) => contains_var(e, var),
+        Expr::Pow(a, b) => contains_var(a, var) || contains_var(b, var),
+        _ => false,
+    }
+}
