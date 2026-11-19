@@ -113,3 +113,18 @@ fn mathml_escapes_special_characters() {
     let xml = symx_core::output::mathml::to_mathml(&expr);
     assert!(xml.contains("a&lt;b&amp;c"));
 }
+
+
+#[test]
+fn parser_accepts_negative_exponent_form() {
+    let expr = parse("x^(-1)").unwrap();
+    assert!(expr.to_string().contains('x'));
+    assert!(!expr.to_string().is_empty());
+}
+
+#[test]
+fn rational_latex_uses_fraction() {
+    let expr = parse("1/x").unwrap();
+    let latex = to_latex(&expr);
+    assert!(latex.contains("\\frac{"));
+}

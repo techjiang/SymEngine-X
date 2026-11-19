@@ -37,5 +37,22 @@ fn wrap(expr: &Expr) -> String {
 }
 
 fn escape(s: &str) -> String {
-    s.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;")
+    s.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
+        .replace('\'', "&apos;")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn escapes_quotes_and_angle_brackets() {
+        let expr = Expr::func("f<\"x\">&", vec![Expr::symbol("a'b")]);
+        let xml = to_mathml(&expr);
+        assert!(xml.contains("f&lt;&quot;x&quot;&gt;&amp;"));
+        assert!(xml.contains("a&apos;b"));
+    }
 }
