@@ -169,10 +169,15 @@ export default function App() {
   const [history, setHistory] = useState<string[]>([]);
   const [mode, setMode] = useState<'latex' | 'mathml'>('latex');
   const [op, setOp] = useState<Operation>('simplify');
+  const [error, setError] = useState('');
 
   const calculate = (value = input, operation = op, format = mode) => {
     const expression = value.trim();
-    if (!expression) return;
+    if (!expression) {
+      setError('请输入表达式');
+      return;
+    }
+    setError('');
     const computed = compute(expression, operation, format);
     const next = computed[computed.length - 1].value;
     setSteps(computed);
@@ -184,11 +189,12 @@ export default function App() {
   return (
     <main>
       <header>
-        <h1>SymEngine-X <span className="badge">v1.0.0</span></h1>
-        <p>符号数学计算引擎 · 在线计算器 · 5 轮迭代增强</p>
+        <h1>SymEngine-X <span className="badge">v1.0.0</span><span className="pill">6 × 5 轮更新</span></h1>
+        <p>符号数学计算引擎 · 在线计算器 · 本轮聚焦极限方向、输出边界与稳定性</p>
       </header>
       <section className="card">
         <InputBar value={input} onChange={setInput} onSubmit={calculate} />
+        {error && <div className="error" role="alert">{error}</div>}
         <div className="ops">
           {OPERATIONS.map((item) => (
             <button key={item.key} className={op === item.key ? 'active' : ''}
