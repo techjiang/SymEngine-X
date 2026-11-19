@@ -51,3 +51,17 @@ fn mathml_output_has_infix_operators() {
     assert!(xml.contains("<mo>&times;</mo>"));
     assert!(xml.contains("<mi>x</mi>"));
 }
+
+#[test]
+fn collect_keeps_float_coefficients() {
+    let expr = parse("0.5*x + 1.5*x").unwrap();
+    let collected = symx_core::simplify::collect::collect(&expr, "x");
+    assert_eq!(collected.to_string(), "2 * x");
+}
+
+#[test]
+fn factor_difference_of_squares() {
+    let expr = parse("x^2 - 2*x + 1").unwrap();
+    let factored = symx_core::simplify::factor::factor(&symx_core::parser::parse("x^2 + 2*x + 1").unwrap());
+    assert!(matches!(factored, Expr::Mul(_)));
+}

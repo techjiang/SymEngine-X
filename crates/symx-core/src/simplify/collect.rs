@@ -1,12 +1,33 @@
 use crate::expr::Expr;
 
+#[derive(Clone, Copy)]
+enum Num { Int(i64), Float(f64) }
+
+impl Num {
+    fn as_f64(self) -> f64 { match self { Num::Int(n) => n as f64, Num::Float(n) => n } }
+    fn add(self, other: Num) -> Num {
+        match (self, other) {
+            (Num::Int(a), Num::Int(b)) => Num::Int(a + b),
+            (a, b) => Num::Float(a.as_f64() + b.as_f64()),
+        }
+    }
+    fn zero(self) -> bool { self.as_f64().abs() < 1e-12 }
+    fn expr(self) -> Expr {
+        match self {
+            Num::Int(n) => Expr::integer(n),
+            Num::Float(n) if n.fract() == 0.0 && n.abs() < i64::MAX as f64 => Expr::integer(n as i64),
+            Num::Float(n) => Expr::Float(n),
+        }
+    }
+}
+
 pub fn collect(expr: &Expr, symbol: &str) -> Expr {
     let expanded = super::expand::expand(expr);
-    let mut groups: Vec<(i64, Expr)> = Vec::new();
+    let mut groups: Vec<(Num, Expr)> = Vec::new();
     if let Expr::Add(items) = &expanded {
         for item in items {
             let (coeff, power) = extract_coeff_power(item, symbol);
-            if let Some(group) = groups.iter_mut().find(|(_, p)| p == &power) { group.0 += coeff; }
+            if let Some(group) = groups.iter_mut().find(|(_, p)| p == &power) { group.0 = group.0.add(coeff); }
             else { groups.push((coeff, power)); }
         }
     } else {
@@ -16,38 +37,49 @@ pub fn collect(expr: &Expr, symbol: &str) -> Expr {
     groups.sort_by(|a, b| format!("{:?}", b.1).cmp(&format!("{:?}", a.1)));
     let mut acc = Expr::zero();
     for (coeff, power) in groups {
-        if coeff == 0 { continue; }
+        if coeff.zero() { continue; }
+        let coefficient = coeff.expr();
         let term = if power == Expr::zero() {
-            Expr::integer(coeff)
+            coefficient
         } else if power == Expr::one() {
-            Expr::mul(Expr::integer(coeff), Expr::symbol(symbol))
+            Expr::mul(coefficient, Expr::symbol(symbol))
         } else {
-            Expr::mul(Expr::integer(coeff), Expr::pow(Expr::symbol(symbol), power))
+            Expr::mul(coefficient, Expr::pow(Expr::symbol(symbol), power))
         };
         acc = Expr::add(acc, term);
     }
     super::rules::simplify(&acc)
 }
 
-fn extract_coeff_power(expr: &Expr, symbol: &str) -> (i64, Expr) {
+fn extract_coeff_power(expr: &Expr, symbol: &str) -> (Num, Expr) {
     if let Expr::Mul(items) = expr {
-        let mut coeff = 1;
+        let mut coeff = Num::Int(1);
         let mut power = Expr::zero();
         for item in items {
             match item {
-                Expr::Integer(n) => coeff *= n,
+                Expr::Integer(n) => coeff = Num::Int(*n),
+                Expr::Rational(n, d) if *d != 0 => coeff = Num::Float(*n as f64 / *d as f64),
+                Expr::Float(n) => coeff = Num::Float(*n),
+                Expr::Neg(inner) => { let (c, p) = extract_coeff_power(inner, symbol); coeff = Num::Float(-c.as_f64()); if p != Expr::zero() { power = p; } }
                 Expr::Symbol(s) if s == symbol => power = Expr::one(),
-                Expr::Pow(base, exp) if **base == Expr::symbol(symbol) && **exp == Expr::Integer(1) => power = (**exp).clone(),
-                Expr::Pow(base, exp) if **base == Expr::symbol(symbol) => power = (**exp).clone(),
+                Expr::Pow(base, exp) if base.as_ref() == &Expr::symbol(symbol) => power = (**exp).clone(),
                 _ => {}
             }
         }
         (coeff, power)
     } else if expr == &Expr::symbol(symbol) {
-        (1, Expr::one())
+        (Num::Int(1), Expr::one())
     } else if let Expr::Pow(base, exp) = expr {
-        if **base == Expr::symbol(symbol) { (1, (**exp).clone()) } else { (1, Expr::zero()) }
+        if base.as_ref() == &Expr::symbol(symbol) { (Num::Int(1), (**exp).clone()) } else { (Num::Int(1), Expr::zero()) }
+    } else if let Expr::Neg(inner) = expr {
+        let (c, p) = extract_coeff_power(inner, symbol);
+        (Num::Float(-c.as_f64()), p)
     } else {
-        (1, Expr::zero())
+        match expr {
+            Expr::Integer(n) => (Num::Int(*n), Expr::zero()),
+            Expr::Rational(n, d) if *d != 0 => (Num::Float(*n as f64 / *d as f64), Expr::zero()),
+            Expr::Float(n) => (Num::Float(*n), Expr::zero()),
+            _ => (Num::Int(1), Expr::zero()),
+        }
     }
 }
