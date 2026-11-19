@@ -4,7 +4,16 @@ fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     if args.is_empty() || args[0] == "--help" {
         println!("SymEngine-X CLI");
-        println!("Usage: symx-cli <expression> [--derive-by VAR] [--integrate VAR] [--limit VAR:POINT] [--factor] [--expand] [--collect VAR] [--to latex|mathml]");
+        println!("Usage: symx-cli <expression> [options]");
+        println!("Options:");
+        println!("  --derive-by VAR       对 VAR 求导");
+        println!("  --integrate VAR       对 VAR 积分");
+        println!("  --limit VAR:POINT     求极限，POINT 支持 0/+inf/-inf");
+        println!("  --taylor VAR:POINT:N  Taylor 展开");
+        println!("  --solve VAR           求解一元多项式方程");
+        println!("  --eval                数值求值");
+        println!("  --factor / --expand / --collect VAR");
+        println!("  --to latex|mathml     切换输出格式");
         return;
     }
     let input = &args[0];
@@ -38,6 +47,29 @@ fn main() {
                     result = limit(&result, parts[0], &point, Direction::Both);
                 }
                 i += 2;
+            }
+            "--taylor" => {
+                let arg = args.get(i + 1).cloned().unwrap_or_else(|| "x:0:3".into());
+                let parts: Vec<&str> = arg.split(':').collect();
+                if parts.len() >= 2 {
+                    let point = parse(parts[1]).unwrap_or(Expr::zero());
+                    let order = parts.get(2).and_then(|s| s.parse().ok()).unwrap_or(3);
+                    result = taylor(&result, parts[0], &point, order);
+                }
+                i += 2;
+            }
+            "--solve" => {
+                let var = args.get(i + 1).cloned().unwrap_or_else(|| "x".into());
+                let roots = symx_core::algebra::root::solve(&result, &var);
+                println!("{roots:?}");
+                return;
+            }
+            "--eval" => {
+                match symx_core::numerical_eval(&result) {
+                    Some(value) => println!("{value}"),
+                    None => { eprintln!("expression is not numerically evaluable"); std::process::exit(1); }
+                }
+                return;
             }
             "--factor" => { result = symx_core::simplify::factor::factor(&result); i += 1; }
             "--expand" => { result = symx_core::simplify::expand::expand(&result); i += 1; }

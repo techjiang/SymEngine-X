@@ -1,5 +1,6 @@
 use crate::expr::Expr;
 
+/// 对表达式做因式分解，支持完全平方与平方差。
 pub fn factor(expr: &Expr) -> Expr {
     if let Expr::Add(items) = expr {
         let normalized = super::rules::simplify(expr);
@@ -21,6 +22,20 @@ pub fn factor(expr: &Expr) -> Expr {
                         }
                     }
                 }
+            }
+        }
+    }
+    // a^2 - b^2 => (a - b)(a + b)
+    if let Expr::Add(items) = expr {
+        if items.len() == 2 {
+            let (a, a_sq) = as_square_term(&items[0]);
+            let (b, b_sq) = as_square_term(&items[1]);
+            let negative = matches!(&items[1], Expr::Neg(_)) || matches!(&items[0], Expr::Neg(_));
+            if negative && a_sq != Expr::zero() && b_sq != Expr::zero() {
+                return Expr::mul(
+                    Expr::sub(a.clone(), b.clone()),
+                    Expr::add(a, b),
+                );
             }
         }
     }
