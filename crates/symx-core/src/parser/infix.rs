@@ -6,6 +6,7 @@ enum Token { Num(f64), Ident(String), Op(char), LParen, RParen, Comma }
 pub fn parse(input: &str) -> Result<Expr, String> {
     let tokens = lex(input)?;
     let mut parser = Parser { tokens, pos: 0 };
+    if tokens.is_empty() { return Err("empty expression".into()); }
     let expr = parser.parse_expr()?;
     if parser.pos != parser.tokens.len() { return Err(format!("unexpected token at {}", parser.pos)); }
     Ok(expr)
@@ -32,7 +33,9 @@ fn lex(input: &str) -> Result<Vec<Token>, String> {
                 }
                 if dots > 1 { return Err("invalid number".into()); }
                 let s: String = chars[start..i].iter().collect();
-                out.push(Token::Num(s.parse::<f64>().map_err(|_| "invalid number".to_string())?));
+                let value = s.parse::<f64>().map_err(|_| "invalid number".to_string())?;
+                if !value.is_finite() { return Err("invalid number".into()); }
+                out.push(Token::Num(value));
             }
             'a'..='z' | 'A'..='Z' | '_' => {
                 let start = i;

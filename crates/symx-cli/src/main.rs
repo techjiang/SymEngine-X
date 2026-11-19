@@ -8,7 +8,14 @@ fn main() {
         return;
     }
     let input = &args[0];
-    let expr = match parse(input) { Ok(expr) => expr, Err(err) => { eprintln!("parse error: {err}"); std::process::exit(1); } };
+    let expr = match parse(input) {
+        Ok(expr) => expr,
+        Err(err) => {
+            eprintln!("parse error: {err}");
+            eprintln!("hint: 使用 --help 查看支持的表达式语法与选项");
+            std::process::exit(1);
+        }
+    };
     let mut result = expr;
     let mut i = 1;
     while i < args.len() {
