@@ -12,11 +12,21 @@ pub fn factorize(mut n: u64) -> Vec<u64> {
 
 pub fn is_prime(n: u64) -> bool {
     if n < 2 { return false; }
-    if n % 2 == 0 { return n == 2; }
-    let mut d = 3;
-    while d * d <= n {
-        if n % d == 0 { return false; }
-        d += 2;
+    for p in [2u64, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37] {
+        if n % p == 0 { return n == p; }
+    }
+    let mut d = n - 1;
+    let mut s = 0u32;
+    while d % 2 == 0 { d /= 2; s += 1; }
+    for a in [2u64, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37] {
+        let mut x = mod_pow(a, d, n);
+        if x == 1 || x == n - 1 { continue; }
+        let mut witness = true;
+        for _ in 1..s {
+            x = x.saturating_mul(x) % n;
+            if x == n - 1 { witness = false; break; }
+        }
+        if witness { return false; }
     }
     true
 }
