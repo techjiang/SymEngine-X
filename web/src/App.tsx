@@ -17,7 +17,7 @@ const OPERATIONS: { key: Operation; label: string }[] = [
 function compute(input: string, op: Operation, format: 'latex' | 'mathml'): Step[] {
   const expression = input.replace(/\s+/g, '').replace(/\*\*/g, '^');
   const steps: Step[] = [{ label: '输入', value: input }];
-  const normalized = expression.replace(/(\d)([a-zA-Z])/g, '$1*$2');
+  const normalized = normalizeInfix(expression);
   steps.push({ label: '解析', value: normalized });
 
   let result = normalized;
@@ -47,6 +47,10 @@ function compute(input: string, op: Operation, format: 'latex' | 'mathml'): Step
     value: format === 'latex' ? toLatex(result) : toMathML(result),
   });
   return steps;
+}
+
+function normalizeInfix(expr: string): string {
+  return expr.replace(/(\d+(?:\.\d+)?)([a-zA-Z])/g, '$1*$2');
 }
 
 function derivative(expr: string): string {
@@ -116,14 +120,47 @@ function solveQuadratic(a: number, b: number, c: number): number[] {
 }
 
 function toLatex(expr: string): string {
-  return expr
-    .replace(/\*([a-zA-Z])/g, ' $1')
-    .replace(/x\^(\d+)/g, 'x^{$1}')
-    .replace(/\//g, '}{');
+  const escaped = expr
+    .replace(/&/g, '\\&')
+    .replace(/%/g, '\\%')
+    .replace(/\$/g, '\\$')
+    .replace(/#/g, '\\#')
+    .replace(/_/g, '\\_')
+    .replace(/\*/([a-zA-Z])/g, ' $1')
+    .replace(/x\^(\d+)/g, 'x^{$1}');
+  const slash = escaped.indexOf('/');
+  if (slash === -1) return escaped;
+  const numerator = escaped.slice(0, slash);
+  const denominator = escaped.slice(slash + 1);
+  return `\\frac{${numerator}}{${denominator}}`;
 }
 
 function toMathML(expr: string): string {
-  return `<mrow>${expr.replace(/x/g, '<mi>x</mi>').replace(/([0-9]+)/g, '<mn>$1</mn>').replace(/\+/g, '<mo>+</mo>').replace(/\*/g, '<mo>&times;</mo>')}</mrow>`;
+  const parts = expr.split(/([+*/])/).filter(Boolean);
+  const body = parts.map((part) => {
+    if (part === '+') return '<mo>+</mo>';
+    if (part === '*') return '<mo>&times;</mo>';
+    if (part === '/') return '<mo>/</mo>';
+    const match = part.match(/^(\d+(?:\.\d+)?)?\*?(x(?:\^\d+)?)?$/);
+    if (match) {
+      const coefficient = match[1] ? `<mn>${match[1]}</mn>` : '';
+      const symbol = match[2] ? renderMathMLSymbol(match[2]) : '';
+      return coefficient && symbol ? `<mrow>${coefficient}<mo>&times;</mo>${symbol}</mrow>` : coefficient || symbol || `<mn>${escapeXml(part)}</mn>`;
+    }
+    return `<mn>${escapeXml(part)}</mn>`;
+  });
+  return `<mrow>${body.join('')}</mrow>`;
+}
+
+function renderMathMLSymbol(symbol: string): string {
+  const match = symbol.match(/^([a-zA-Z])(?:\^(\d+))?$/);
+  if (!match) return `<mi>${escapeXml(symbol)}</mi>`;
+  const base = `<mi>${escapeXml(match[1])}</mi>`;
+  return match[2] ? `<msup>${base}<mn>${match[2]}</mn></msup>` : base;
+}
+
+function escapeXml(value: string): string {
+  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 export default function App() {
