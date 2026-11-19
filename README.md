@@ -78,3 +78,25 @@ symx-cli --latex-expr 'x^2 + 1/2'
 symx-cli --mathml-expr 'sqrt(x)'
 symx-cli '2*x/x' --limit x:+inf
 ```
+
+## 作者与社区
+
+- 作者：科技酱（同一个世界，同一个互联网！）
+- 主页：https://www.asoe.cn
+- 技术文档：https://docs.asoe.cn
+- GitHub：https://github.com/techjiang/
+- 哔哩哔哩：https://space.bilibili.com/1768832152
+- 邮箱：official@tech.asoe.cn
+- 玲珑：https://forums.asoe.cn/
+- QQ群：291974598 / 474819022 / 631167288
+
+## 发布与可用性说明
+
+- 版本：v1.0.0（最终维护版本）
+- 依赖：Rust stable 工具链（核心/CLI）、Node.js 18+（Web 计算器）
+- 快速体验：
+  - Web：`cd web && npm install && npm run build && npm run preview`
+  - CLI：`cargo run -p symx-cli -- 'x^2 - 2*x + 1' --factor`
+  - 测试：`cargo test --workspace`（Rust）、`cd web && npm run build`（前端）
+- 已知边界：v1.0.0 聚焦 M1/M2 可运行能力（表达式、化简、微积分基础、矩阵、数论、LaTeX/MathML、CLI/Web）；Risch 完整积分、SVD、PDE、PyO3/WASM 正式下载包仍在路线图。
+- 仓库归档：源码与原版 Release 产物同步至 https://github.com/techjiang/SymEngine-X.git

@@ -177,3 +177,11 @@ fn parser_accepts_scientific_notation() {
     let expr = parse("1e3 + 2*x").unwrap();
     assert!(expr.to_string().contains("1000") || expr.to_string().contains("1e3"));
 }
+
+#[test]
+fn latex_parser_accepts_sqrt_and_frac() {
+    let expr = parse_latex(r"\sqrt{x^2 + 1}").unwrap();
+    assert_eq!(expr.to_string(), "sqrt(x^2 + 1)");
+    let frac = parse_latex(r"\frac{x}{2}").unwrap();
+    assert!(frac.to_string().contains('/'));
+}

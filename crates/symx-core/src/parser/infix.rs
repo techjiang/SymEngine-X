@@ -33,26 +33,12 @@ fn lex(input: &str) -> Result<Vec<Token>, String> {
                     i += 1;
                 }
             }
-            '0'..='9' | '.' => {
-                let start = i;
-                let mut dots = 0;
-                while i < chars.len() && (chars[i].is_ascii_digit() || chars[i] == '.') {
-                    if chars[i] == '.' { dots += 1; }
-                    i += 1;
-                }
-                if dots > 1 { return Err("invalid number".into()); }
-                let s: String = chars[start..i].iter().collect();
-                let value = s.parse::<f64>().map_err(|_| "invalid number".to_string())?;
-                if !value.is_finite() { return Err("invalid number".into()); }
-                out.push(Token::Num(value));
-            }
             '0'..='9' | '.' | 'a'..='z' | 'A'..='Z' | '_' => {
                 let start = i;
                 while i < chars.len() && (chars[i].is_ascii_alphanumeric() || chars[i] == '.' || chars[i] == '_') { i += 1; }
                 let text: String = chars[start..i].iter().collect();
-                if text.chars().next().is_some_and(|c| c.is_ascii_digit() || c == '.')
-                    && text.contains('e')
-                {
+                let first = text.chars().next().unwrap_or(' ');
+                if first.is_ascii_digit() || first == '.' {
                     let value = text.parse::<f64>().map_err(|_| "invalid number".to_string())?;
                     if !value.is_finite() { return Err("invalid number".into()); }
                     out.push(Token::Num(value));

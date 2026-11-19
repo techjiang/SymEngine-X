@@ -16,7 +16,7 @@ const OPERATIONS: { key: Operation; label: string }[] = [
 ];
 
 function compute(input: string, op: Operation, format: 'latex' | 'mathml'): Step[] {
-  const expression = input.replace(/\s+/g, '').replace(/\*\*/g, '^');
+  const expression = normalizeInput(input);
   const steps: Step[] = [{ label: '输入', value: input }];
   const normalized = normalizeInfix(expression);
   steps.push({ label: '解析', value: normalized });
@@ -56,6 +56,15 @@ function compute(input: string, op: Operation, format: 'latex' | 'mathml'): Step
 
 function normalizeInfix(expr: string): string {
   return expr.replace(/(\d+(?:\.\d+)?)([a-zA-Z])/g, '$1*$2');
+}
+
+function normalizeInput(expr: string): string {
+  return expr
+    .replace(/\s+/g, '')
+    .replace(/\*\*/g, '^')
+    .replace(/\*?\^/g, '^')
+    .replace(/\/\//g, '/')
+    .replace(/∞/g, 'inf');
 }
 
 function derivative(expr: string): string {
@@ -194,7 +203,7 @@ export default function App() {
 
   const calculate = (value = input, operation = op, format = mode) => {
     const expression = value.trim();
-    const normalizedInput = expression.replace(/\s+/g, '').replace(/\*\*/g, '^');
+    const normalizedInput = normalizeInput(expression);
     if (!expression) {
       setError('请输入表达式');
       return;
